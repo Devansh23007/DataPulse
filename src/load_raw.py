@@ -64,13 +64,19 @@ def setup_database(conn):
                 loaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
         """)
+        
+        conn.execute("""
+            ALTER TABLE raw.ingestion_batches
+            ADD COLUMN IF NOT EXISTS is_current BOOLEAN
+            NOT NULL DEFAULT TRUE
+        """)
+
 
 
 def load_file(conn, filename, required_columns, logger):
     path = RAW_DIR / filename
     started = time.perf_counter()
 
-    # Validate before opening the database transaction.
     columns, unexpected = validate_file(
         path, required_columns
     )
@@ -78,28 +84,31 @@ def load_file(conn, filename, required_columns, logger):
     table_name = Path(filename).stem
 
     with conn.transaction():
-        existing = conn.execute(
+        # Find the currently active version of this source.
+        current = conn.execute(
             """
-            SELECT row_count
+            SELECT batch_id, row_count
             FROM raw.ingestion_batches
-            WHERE batch_id = %s
+            WHERE source_file = %s
+              AND is_current = TRUE
             """,
-            (batch_id,),
+            (filename,),
         ).fetchone()
 
-        if existing:
+        # Exact same file version: no work needed.
+        if current and current[0] == batch_id:
             log_event(
                 logger,
                 logging.INFO,
-                "Batch already loaded; skipping",
+                "Current batch already loaded; skipping",
                 file_name=filename,
                 batch_id=batch_id,
-                row_count=existing[0],
+                row_count=current[1],
                 status="SKIPPED",
             )
-            return "SKIPPED", existing[0]
+            return "SKIPPED", current[1]
 
-        # Create a raw table with source columns as TEXT.
+        # Create the raw table if it does not exist.
         column_definitions = sql.SQL(", ").join(
             sql.SQL("{} TEXT").format(sql.Identifier(col))
             for col in columns
@@ -112,6 +121,15 @@ def load_file(conn, filename, required_columns, logger):
                 sql.Identifier("raw"),
                 sql.Identifier(table_name),
                 column_definitions,
+            )
+        )
+
+        # Remove the previous snapshot inside this transaction.
+        # If loading fails, PostgreSQL rolls this deletion back.
+        conn.execute(
+            sql.SQL("DELETE FROM {}.{}").format(
+                sql.Identifier("raw"),
+                sql.Identifier(table_name),
             )
         )
 
@@ -136,38 +154,52 @@ def load_file(conn, filename, required_columns, logger):
             chunksize=CHUNK_SIZE,
             keep_default_na=False,
         ):
-            # Preserve strings. Represent empty CSV fields
-            # as SQL NULL in the raw table.
             chunk = chunk.astype(object).where(
                 chunk != "", None
             )
 
-            records = list(chunk.itertuples(
-                index=False, name=None
-            ))
+            records = list(
+                chunk.itertuples(index=False, name=None)
+            )
 
             if records:
                 with conn.cursor() as cur:
-                    cur.executemany(
-                        insert_query, records
-                    )
+                    cur.executemany(insert_query, records)
 
             total_rows += len(records)
 
+        # Mark the previous version as historical.
+        conn.execute(
+            """
+            UPDATE raw.ingestion_batches
+            SET is_current = FALSE
+            WHERE source_file = %s
+            """,
+            (filename,),
+        )
+
+        # Record the newly loaded version. If this exact
+        # version existed historically, reactivate its record.
         conn.execute(
             """
             INSERT INTO raw.ingestion_batches
-                (batch_id, source_file, row_count)
-            VALUES (%s, %s, %s)
+                (batch_id, source_file, row_count,
+                 loaded_at, is_current)
+            VALUES (%s, %s, %s, NOW(), TRUE)
+            ON CONFLICT (batch_id)
+            DO UPDATE SET
+                row_count = EXCLUDED.row_count,
+                loaded_at = NOW(),
+                is_current = TRUE
             """,
             (batch_id, filename, total_rows),
         )
 
-    # The transaction has committed successfully here.
+    # This point is reached after the transaction commits.
     log_event(
         logger,
         logging.INFO,
-        "Raw table loaded",
+        "Raw source snapshot loaded",
         file_name=filename,
         table_name=f"raw.{table_name}",
         batch_id=batch_id,
