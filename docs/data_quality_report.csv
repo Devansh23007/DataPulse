@@ -1,0 +1,8 @@
+file_name,status,row_count,key_columns,null_key_rows,duplicate_key_rows,error
+olist_customers_dataset.csv,PASS,99441,customer_id,0,0,
+olist_orders_dataset.csv,PASS,99441,order_id,0,0,
+olist_order_items_dataset.csv,PASS,112650,"order_id, order_item_id",0,0,
+olist_order_payments_dataset.csv,PASS,103886,"order_id, payment_sequential",0,0,
+olist_products_dataset.csv,PASS,32951,product_id,0,0,
+olist_sellers_dataset.csv,PASS,3095,seller_id,0,0,
+product_category_name_translation.csv,PASS,71,product_category_name,0,0,
