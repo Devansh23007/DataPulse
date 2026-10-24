@@ -8,3 +8,6 @@ data/raw/
 data/processed/
 .vscode/
 .idea/
+.dbt/
+airflow/logs/
+airflow/__pycache__/
