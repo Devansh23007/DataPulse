@@ -9,5 +9,10 @@ data/processed/
 .vscode/
 .idea/
 .dbt/
-airflow/logs/
 airflow/__pycache__/
+# dbt generated files
+datapulse_dbt/target/
+datapulse_dbt/logs/
+# Airflow runtime files
+airflow/logs/
+airflow/metadata/
