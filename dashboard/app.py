@@ -81,6 +81,15 @@ def get_corruption_report():
 
     return pd.read_csv(path)
 
+@st.cache_data(ttl=60)
+def get_performance_report():
+    path = ROOT_DIR / "docs" / "performance_report.csv"
+
+    if not path.exists():
+        return pd.DataFrame()
+
+    return pd.read_csv(path)
+
 try:
     sales = get_sales()
     counts = get_table_counts()
@@ -164,6 +173,36 @@ try:
             use_container_width=True,
             hide_index=True,
         )
+
+    st.subheader("Pipeline Performance")
+
+    performance = get_performance_report()
+
+    if performance.empty:
+        st.info(
+            "No benchmark report found. "
+            "Run python -m src.performance_benchmark first."
+        )
+    else:
+        st.dataframe(
+            performance,
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        total = performance[
+            performance["stage"] == "end_to_end"
+        ]
+
+        if not total.empty:
+            duration = float(
+                total.iloc[0]["duration_seconds"]
+            )
+            st.metric(
+                "End-to-end runtime",
+                f"{duration:.2f} seconds",
+            )
+
 
 
 except Exception as exc:

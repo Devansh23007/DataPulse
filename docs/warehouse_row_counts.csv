@@ -1,0 +1,5 @@
+table_name,row_count
+mart_daily_sales,1783
+raw_orders,99441
+stg_orders,99441
+fact_order_items,112650

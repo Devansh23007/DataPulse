@@ -1,0 +1,5 @@
+stage,duration_seconds,exit_code,status
+raw_load,2.53,0,PASS
+dbt_run,16.338,0,PASS
+dbt_test,12.597,0,PASS
+end_to_end,31.579,0,PASS
