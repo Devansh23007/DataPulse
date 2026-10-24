@@ -3,15 +3,33 @@ version: 2
 
 sources:
   - name: olist_raw
-    description: Raw Olist data loaded by the Python ingestion pipeline.
+    description: "Raw Olist CSV data loaded into PostgreSQL by the Python ingestion pipeline."
     schema: raw
+
     tables:
       - name: olist_orders_dataset
+        description: "One record per order."
+
       - name: olist_customers_dataset
+        description: "Customer records associated with Olist orders."
+
       - name: olist_order_items_dataset
+        description: "One record per item within an order."
+
       - name: olist_order_payments_dataset
+        description: "Payment records associated with orders."
+
       - name: olist_order_reviews_dataset
+        description: "Review records associated with orders."
+
       - name: olist_products_dataset
+        description: "Product attributes."
+
       - name: olist_sellers_dataset
+        description: "Seller records and location attributes."
+
       - name: olist_geolocation_dataset
+        description: "Geolocation records for ZIP code prefixes."
+
       - name: product_category_name_translation
+        description: "Mappings between original product category names and English names."

@@ -1,0 +1,77 @@
+
+version: 2
+
+models:
+  - name: dim_customers
+    description: "Customer dimension, one row per customer record."
+    columns:
+      - name: customer_id
+        description: "Customer record identifier."
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_products
+    description: "Product dimension, one row per product."
+    columns:
+      - name: product_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: dim_sellers
+    description: "Seller dimension, one row per seller."
+    columns:
+      - name: seller_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: fact_order_items
+    description: "One row per order item, identified by order_id and order_item_id."
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+
+      - name: order_item_id
+        data_tests:
+          - not_null
+
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_id
+
+      - name: seller_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_sellers')
+                field: seller_id
+
+  - name: mart_daily_sales
+    description: "Daily order item metrics grouped by purchase date and order status."
+    columns:
+      - name: order_date
+        data_tests:
+          - not_null
+      - name: order_status
+        data_tests:
+          - not_null
