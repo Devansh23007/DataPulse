@@ -1,0 +1,6 @@
+test_name,status,details
+missing_order_id,PASS,Detected 1 rows with null keys
+duplicate_order_item_key,PASS,Detected 2 duplicate-key rows
+negative_price,PASS,Detected 1 invalid price values
+missing_product_relationship,PASS,Detected 1 order items with missing products
+valid_orders,PASS,Valid unique order IDs accepted

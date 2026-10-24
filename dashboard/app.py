@@ -72,6 +72,14 @@ def get_table_counts():
         FROM analytics.fact_order_items
     """)
 
+@st.cache_data(ttl=60)
+def get_corruption_report():
+    path = ROOT_DIR / "docs" / "corruption_test_report.csv"
+
+    if not path.exists():
+        return pd.DataFrame()
+
+    return pd.read_csv(path)
 
 try:
     sales = get_sales()
@@ -130,6 +138,33 @@ try:
     st.dataframe(counts, use_container_width=True)
 
     st.caption("Database metrics refresh every 60 seconds.")
+    st.subheader("Data Quality Test Results")
+
+    quality_report = get_corruption_report()
+
+    if quality_report.empty:
+        st.info(
+            "No corruption test report found. "
+            "Run python -m src.corruption_tests first."
+        )
+    else:
+        passed = int(
+            (quality_report["status"] == "PASS").sum()
+        )
+        failed = int(
+            (quality_report["status"] == "FAIL").sum()
+        )
+
+        q1, q2 = st.columns(2)
+        q1.metric("Checks passed", passed)
+        q2.metric("Checks failed", failed)
+
+        st.dataframe(
+            quality_report,
+            use_container_width=True,
+            hide_index=True,
+        )
+
 
 except Exception as exc:
     st.error("Could not load dashboard data from PostgreSQL.")
@@ -138,3 +173,6 @@ except Exception as exc:
         "Check Docker, the database connection settings, "
         "and whether the required analytics tables exist."
     )
+
+
+
