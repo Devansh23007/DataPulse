@@ -2,20 +2,56 @@
 version: 2
 
 models:
-  - name: my_first_dbt_model
-    description: "A starter dbt model"
+  - name: stg_orders
+    description: "Cleaned order records from the Olist source dataset."
     columns:
-      - name: id
-        description: "The primary key for this table"
+      - name: order_id
+        description: "Unique identifier for an order."
         data_tests:
+          - not_null
           - unique
+
+      - name: customer_id
+        description: "Identifier of the customer associated with the order."
+        data_tests:
           - not_null
 
-  - name: my_second_dbt_model
-    description: "A starter dbt model"
+  - name: stg_customers
+    description: "Standardized customer records."
     columns:
-      - name: id
-        description: "The primary key for this table"
+      - name: customer_id
+        description: "Identifier of a customer record."
         data_tests:
+          - not_null
           - unique
+
+  - name: stg_products
+    description: "Standardized product attributes."
+    columns:
+      - name: product_id
+        description: "Unique identifier for a product."
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_sellers
+    description: "Standardized seller records."
+    columns:
+      - name: seller_id
+        description: "Unique identifier for a seller."
+        data_tests:
+          - not_null
+          - unique
+
+  - name: stg_order_items
+    description: "Standardized order item records."
+    columns:
+      - name: order_id
+        description: "Identifier of the associated order."
+        data_tests:
+          - not_null
+
+      - name: order_item_id
+        description: "Item sequence within an order."
+        data_tests:
           - not_null

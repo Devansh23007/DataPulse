@@ -16,6 +16,14 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
+
 models:
   datapulse_dbt:
-    +materialized: view
+    staging:
+      +materialized: view
+    dimensions:
+      +materialized: table
+    facts:
+      +materialized: table
+    marts:
+      +materialized: table
