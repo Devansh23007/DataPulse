@@ -10,10 +10,10 @@ and Airflow retry behavior for the Olist data pipeline.
 
 | Test | Expected Result | Actual Result |
 |---|---|---|
-| Duplicate batch replay | Unchanged batches skipped | Pending |
+| Duplicate batch replay | Unchanged batches skipped | Pass |
 | Current batch metadata | One current batch per source | Pass |
 | Database rollback | Row count unchanged | Pass |
-| Airflow retry demonstration | Retries exhausted and task fails | Pending |
+| Airflow retry demonstration | Retries exhausted and task fails | Pass |
 | Main pipeline rerun | All four tasks succeed | Pass |
 
 ## Failure Recovery
